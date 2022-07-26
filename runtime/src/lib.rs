@@ -282,7 +282,7 @@ construct_runtime!(
 		TransactionPayment: pallet_transaction_payment,
 		Sudo: pallet_sudo,
 		// Include the custom logic from the pallet-template in the runtime.
-		TemplateModule: pallet_clubs,
+		Clubs: pallet_clubs,
 	}
 );
 
@@ -315,10 +315,6 @@ pub type Executive = frame_executive::Executive<
 	Runtime,
 	AllPalletsWithSystem,
 >;
-
-#[cfg(feature = "runtime-benchmarks")]
-#[macro_use]
-extern crate frame_benchmarking;
 
 impl_runtime_apis! {
 	impl sp_api::Core<Block> for Runtime {

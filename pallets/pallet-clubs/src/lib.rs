@@ -15,6 +15,7 @@ mod tests;
 
 #[derive(Clone, Copy, Debug, Encode, Decode, TypeInfo, PartialEq, Eq, MaxEncodedLen)]
 pub enum Clubs {
+	Empty,
 	CoolGuys,
 	EvenCoolerGuys,
 	BadGuys,
@@ -44,8 +45,7 @@ pub mod pallet {
 	#[pallet::getter(fn club_list)]
 	// Learn more about declaring storage items:
 	// https://docs.substrate.io/v3/runtime/storage#declaring-storage-items
-	pub(super) type ClubList<T: Config> =
-		StorageMap<_, Blake2_128Concat, T::AccountId, BoundedVec<Clubs>>;
+	pub(super) type ClubList<T: Config> = StorageMap<_, Blake2_128Concat, T::AccountId, Clubs>;
 
 	// Pallets use events to inform users when important changes are made.
 	// https://docs.substrate.io/v3/runtime/events-and-errors
@@ -54,7 +54,7 @@ pub mod pallet {
 	pub enum Event<T: Config> {
 		/// Event documentation should end with an array that provides descriptive names for event
 		/// parameters. [something, who]
-		ClubsAssigned(T::AccountId, Vec<Clubs>),
+		ClubAssigned(T::AccountId, Clubs),
 	}
 
 	// Dispatchable functions allows users to interact with the pallet and invoke state changes.
@@ -62,24 +62,23 @@ pub mod pallet {
 	// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		/// An example dispatchable that takes a singles value as a parameter, writes the value to
-		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
+		/// Assign a club to a user or remove it.
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn assign_clubs(
+		pub fn assign_club(
 			origin: OriginFor<T>,
 			user: T::AccountId,
-			clubs: Vec<Clubs>,
+			club: Clubs,
 		) -> DispatchResult {
 			ensure_root(origin)?;
 
-			// Remove from storage instead of storing as an empty club list
-			if clubs.is_empty() {
+			// Remove from storage instead of storing as "Empty" club
+			if let Clubs::Empty = club {
 				ClubList::<T>::remove(user.clone());
 			} else {
-				ClubList::<T>::insert(user.clone(), clubs);
+				ClubList::<T>::insert(user.clone(), club);
 			}
 
-			Self::deposit_event(Event::ClubsAssigned(user, clubs));
+			Self::deposit_event(Event::ClubAssigned(user, club));
 
 			Ok(())
 		}
